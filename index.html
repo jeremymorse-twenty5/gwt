@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gainwell Program Status Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #2c3e50;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #2c3e50;
+        }
+
+        .nav-links a.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1rem;
+        }
+
+        .hero {
+            background: white;
+            border-radius: 8px;
+            padding: 2.5rem 3rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .hero-updated {
+            font-size: 0.85rem;
+            color: #95a5a6;
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .hero-updated strong {
+            display: block;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            margin-top: 0.2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.25rem;
+            margin-bottom: 0.75rem;
+            color: #2c3e50;
+        }
+
+        .hero .tagline {
+            font-size: 1.15rem;
+            color: #7f8c8d;
+        }
+
+        .summary-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1.75rem 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr 1px 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .summary-divider {
+            background: #ecf0f1;
+            width: 1px;
+            height: 100%;
+            align-self: stretch;
+        }
+
+        .metric {
+            margin-bottom: 1.1rem;
+        }
+
+        .metric:last-child {
+            margin-bottom: 0;
+        }
+
+        .metric-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.45rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .metric-num {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .metric-bar {
+            height: 8px;
+            background: #f0f2f5;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+        .health-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.55rem;
+        }
+
+        .health-title {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .health-bar {
+            display: flex;
+            height: 14px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #f0f2f5;
+            margin-bottom: 0.75rem;
+        }
+
+        .health-seg {
+            height: 100%;
+        }
+
+        .health-legend {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .health-legend .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.4rem;
+            vertical-align: middle;
+        }
+
+        .health-legend strong {
+            color: #2c3e50;
+        }
+
+        @media (max-width: 720px) {
+            .summary-panel {
+                grid-template-columns: 1fr;
+            }
+            .summary-divider {
+                display: none;
+            }
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .program-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .program-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .program-card.linked {
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .program-card.linked:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .program-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .program-card h3 {
+            font-size: 1.2rem;
+            color: #2c3e50;
+        }
+
+        .program-card .desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #7f8c8d;
+            margin-bottom: 1.25rem;
+            flex-grow: 1;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-ontrack { background: #e8f6ef; color: #27ae60; }
+        .status-progress { background: #eaf2fb; color: #2980b9; }
+        .status-planning { background: #fdf3e3; color: #e67e22; }
+        .status-risk { background: #fdecea; color: #c0392b; }
+        .status-active { background: #f0eafb; color: #8e44ad; }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #95a5a6;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 0.9rem;
+            margin-top: auto;
+        }
+
+        .meta-row strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .progress-track {
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: #3498db;
+        }
+
+        .card-cta {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #3498db;
+            margin-top: 0.75rem;
+        }
+
+        .footnote {
+            margin-top: 2.5rem;
+            font-size: 0.85rem;
+            color: #95a5a6;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Gainwell Program Dashboard</div>
+            <ul class="nav-links">
+                <li><a href="./" class="active">Home</a></li>
+                <li><a href="comparison-engine/">Comparison Engine</a></li>
+                <li><a href="parametric-modeling/">Parametric Modeling</a></li>
+                <li><a href="offering-pipeline/">Offering Pipeline</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="hero">
+            <div>
+                <h1>Gainwell Program Status</h1>
+                <p class="tagline">Portfolio overview of services delivered by Twenty5</p>
+            </div>
+            <div class="hero-updated">Last updated<strong>June 25, 2026</strong></div>
+        </div>
+
+        <div class="summary-panel">
+            <div class="summary-metrics">
+                <div class="metric">
+                    <div class="metric-top">
+                        <span class="metric-label">Active Programs</span>
+                        <span class="metric-num">6</span>
+                    </div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 100%; background: #3498db;"></div></div>
+                </div>
+                <div class="metric">
+                    <div class="metric-top">
+                        <span class="metric-label">Standalone Dashboards</span>
+                        <span class="metric-num">2</span>
+                    </div>
+                    <div class="metric-bar"><div class="metric-bar-fill" style="width: 33%; background: #8e44ad;"></div></div>
+                </div>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-health">
+                <div class="health-head">
+                    <span class="health-title">Program Health</span>
+                </div>
+                <div class="health-bar">
+                    <div class="health-seg" style="width: 100%; background: #27ae60;"></div>
+                </div>
+                <div class="health-legend">
+                    <span><span class="dot" style="background: #27ae60;"></span>On Track <strong>6</strong></span>
+                    <span><span class="dot" style="background: #c0392b;"></span>At Risk <strong>0</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Programs</h2>
+        <div class="program-grid">
+
+            <a href="comparison-engine/" class="program-card linked">
+                <div class="program-card-head">
+                    <h3>Product-Based Comparison Engine</h3>
+                    <span class="status-badge status-progress">Alpha</span>
+                </div>
+                <p class="desc">Scope modeling tool that rolls attribute-level data up a product hierarchy to compare PBM implementations and surface where capability, intensity, and value concentrate.</p>
+                <div class="progress-track"><div class="progress-fill" style="width: 40%;"></div></div>
+                <div class="meta-row">
+                    <span>Stage: <strong>Alpha</strong></span>
+                    <span>Updated: <strong>June 25, 2026</strong></span>
+                </div>
+                <div class="card-cta">View dashboard →</div>
+            </a>
+
+            <a href="parametric-modeling/" class="program-card linked">
+                <div class="program-card-head">
+                    <h3>Parametric Modeling</h3>
+                    <span class="status-badge status-progress">In Progress</span>
+                </div>
+                <p class="desc">Weighting, prioritization, and scaling framework that drives fit calculations and capability concentration across the comparison engine.</p>
+                <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
+                <div class="meta-row">
+                    <span>Stage: <strong>Design</strong></span>
+                    <span>Updated: <strong>June 25, 2026</strong></span>
+                </div>
+                <div class="card-cta">View dashboard →</div>
+            </a>
+
+            <a href="offering-pipeline/" class="program-card linked">
+                <div class="program-card-head">
+                    <h3>Offering Pipeline</h3>
+                    <span class="status-badge status-active">Active</span>
+                </div>
+                <p class="desc">Onboarding of Gainwell Offerings into the program portfolio, including intake, cost drivers & commercials definition, tree building, validation, and chat use-case benchmarking.</p>
+                <div class="progress-track"><div class="progress-fill" style="width: 50%;"></div></div>
+                <div class="meta-row">
+                    <span>Stage: <strong>4 Offerings In Progress</strong></span>
+                    <span>Updated: <strong>June 25, 2026</strong></span>
+                </div>
+                <div class="card-cta">View dashboard →</div>
+            </a>
+
+            <div class="program-card">
+                <div class="program-card-head">
+                    <h3>AI/ML Buildout in iPE v3 Core</h3>
+                    <span class="status-badge status-progress">In Progress</span>
+                </div>
+                <p class="desc">Build-out of AI/ML capabilities within the iPE v3 core platform to support automated analysis and intelligence across the product suite.</p>
+                <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
+                <div class="meta-row">
+                    <span>Stage: <strong>v1 Functionality QA</strong></span>
+                    <span>Updated: <strong>June 25, 2026</strong></span>
+                </div>
+            </div>
+
+            <div class="program-card">
+                <div class="program-card-head">
+                    <h3>Gainwell iPE v3 Upgrade</h3>
+                    <span class="status-badge status-progress">In Progress</span>
+                </div>
+                <p class="desc">Migration and upgrade of Gainwell systems to the iPE v3 platform, modernizing core infrastructure and aligning with the target architecture.</p>
+                <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
+                <div class="meta-row">
+                    <span>Stage: <strong>Config migration & QA</strong></span>
+                    <span>Updated: <strong>June 25, 2026</strong></span>
+                </div>
+            </div>
+
+            <div class="program-card">
+                <div class="program-card-head">
+                    <h3>Support Services</h3>
+                    <span class="status-badge status-ontrack">Ongoing</span>
+                </div>
+                <p class="desc">Ongoing support and maintenance services including Bid Central, DWH, etc.</p>
+                <div class="progress-track"><div class="progress-fill" style="width: 100%;"></div></div>
+                <div class="meta-row">
+                    <span>Stage: <strong>Ongoing</strong></span>
+                    <span>Updated: <strong>June 25, 2026</strong></span>
+                </div>
+            </div>
+
+        </div>
+
+        <p class="footnote">Comparison Engine and Parametric Modeling have dedicated dashboards linked in the top menu.</p>
+    </div>
+</body>
+</html>
