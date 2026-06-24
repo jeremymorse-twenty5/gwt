@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parametric Volumes Model - RX Prior Auth Flow</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 32px; background:#fafbfc; color:#1b2631; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color:#5d6d7e; font-size: 13px; margin: 0 0 18px; }
+  .legend { font-size:12px; color:#5d6d7e; margin: 14px 0 0; }
+  .legend span { display:inline-block; padding:2px 8px; border-radius:4px; margin-right:8px; border:1px solid; }
+  .l-vol { background:#e8f1fb; border-color:#2980b9; }
+  .l-gate{ background:#fdedec; border-color:#c0392b; }
+  .l-kpi { background:#f0e8ff; border-color:#8e44ad; }
+  .l-out { background:#fdf2e3; border-color:#e67e22; }
+  .l-rule{ background:#fff8c4; border-color:#f39c12; }
+  .chart { background:#fff; border:1px solid #e1e5ea; border-radius:8px; padding:16px; overflow:auto; }
+  .src { font-size:11px; color:#8895a7; margin-top:14px; }
+</style>
+</head>
+<body>
+  <h1>Parametric Volumes Model &mdash; RX Prior Auth ("Volumes Calculator")</h1>
+  <p class="sub">Waterfall calculation chain L0 &rarr; L8. Every formula references only volumes higher up the chain &mdash; never down or across &mdash; which is what keeps the model from creating circular calculations. All figures are the real defaults from the example worksheet.</p>
+
+  <div class="chart">
+    <pre class="mermaid">
+flowchart TD
+    L0["<b>L0 - CONTRACT INFORMATION</b><br/>DDI Length: 12 months<br/>M&O Length: 5 years<br/>Offshore Resources Allowed: Yes"]
+
+    L1{"<b>L1 - HIGH-LEVEL SCOPE</b><br/>RX POS In Scope?"}
+    L0 --> L1
+    L1 -->|No| ZERO["Zero out entire<br/>RX container"]
+    L1 -->|Yes| L2
+
+    L2["<b>L2 - HIGH-LEVEL VOLUMES</b><br/>FFS Members: 250,000<br/>MCO Members: 1,250,000<br/>Total Members: 1,500,000<br/>RX In-Scope Members: 250,000 (= FFS count)<br/>Total Annual Claims: 25,200,000 (16.8 / member)<br/>RX In-Scope Annual Claims: 4,200,000"]
+    L2 --> L3
+
+    L3{"<b>L3 - PRIOR AUTH SCOPE</b><br/>Is RX Prior Auth In Scope? Yes<br/>Is Gainwell Decisioning Manual PAs? Yes"}
+    L3 -->|No| ZERO2["Zero out PA<br/>volumes & labor"]
+    L3 -->|Yes| L4
+
+    L4["<b>L4 - PA KEY VOLUMES (monthly)</b><br/>Manual Prior Auths: 2,500<br/>&nbsp;&nbsp;&larr; 1 per 100 in-scope members (250,000 / 100)<br/>PA Automation %: 65%<br/>Automated PAs: 4,643 &nbsp;&larr; 2,500 / (1 - 0.65) - 2,500<br/>Total PAs (Auto + Manual): 7,143<br/>ePA Transactions: 2,500 (= Manual PA volume)"]
+    L4 --> L5
+
+    L5["<b>L5 - CHANNEL & TRANSACTION MIX</b><br/>Manual PA: Electronic 65% / Voice 10% / Fax 25%<br/>ePA: Vendor A 50% / Vendor B 50%"]
+    L5 --> L6
+
+    L6["<b>L6 - DETAILED VOLUMES (monthly)</b><br/>Manual PA: Electronic 1,625 / Voice 250 / Fax 625<br/>ePA: Vendor A 1,250 / Vendor B 1,250 / Total 2,500"]
+    L6 --> L7
+
+    L7["<b>L7 - LABOR KPIs (per FTE / month, M&O Yr 1)</b><br/>Productive minutes/month: 7,728 (9,200 - 16% shrinkage)<br/>Work time/PA: Elec 12 / Voice 20 / Fax 15 min<br/>Manual PA per FTE: Electronic 644 / Voice 386 / Fax 515<br/>Resource split: Pharmacist vs PA Tech"]
+    L7 --> L8
+
+    L8["<b>L8 - M&O LABOR FTEs (Yr 1, pre-rounding)</b><br/>Pharmacist FTEs: 2.28<br/>PA Tech FTEs: 2.10<br/>volume / KPI productivity &rarr; FTEs"]
+
+    Q["<b>QUESTIONNAIRE / INPUTS</b><br/>Scope yes/no flags (L1, L3)<br/>PA Automation % lever (65%)<br/>Channel mix levers (L5)"]
+    Q -.feeds if/then/else.-> L4
+    Q -.feeds if/then/else.-> L5
+
+    RULE["RULE: Calculations reference UPWARD only<br/>never down or across - prevents circular loops"]
+    RULE -.governs.-> L4
+    RULE -.governs.-> L6
+    RULE -.governs.-> L8
+
+    classDef contract fill:#eef2f7,stroke:#5d6d7e,stroke-width:2px,color:#1b2631
+    classDef gate fill:#fdedec,stroke:#c0392b,stroke-width:2px,color:#1b2631
+    classDef volume fill:#e8f1fb,stroke:#2980b9,stroke-width:2px,color:#1b2631
+    classDef kpi fill:#f0e8ff,stroke:#8e44ad,stroke-width:2px,color:#1b2631
+    classDef output fill:#fdf2e3,stroke:#e67e22,stroke-width:2px,color:#1b2631
+    classDef rule fill:#fff8c4,stroke:#f39c12,stroke-width:3px,color:#1b2631
+    classDef sidebox fill:#f4ecff,stroke:#8e44ad,stroke-width:1px,stroke-dasharray: 4 4,color:#1b2631
+
+    class L0 contract
+    class L1,L3,ZERO,ZERO2 gate
+    class L2,L4,L5,L6 volume
+    class L7 kpi
+    class L8 output
+    class Q sidebox
+    class RULE rule
+    </pre>
+  </div>
+
+  <p class="legend">
+    <span class="l-gate">Scope gates</span>
+    <span class="l-vol">Volume containers</span>
+    <span class="l-kpi">Labor KPIs</span>
+    <span class="l-out">Resource output</span>
+    <span class="l-rule">Upward-reference rule</span>
+  </p>
+  <p class="src">Source: Parametric - Volumes Example Worksheet v1.xlsx (Volumes &amp; KPI Worksheet tabs). Dotted lines = feeders / governing rules; solid lines = value flow.</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, flowchart: { htmlLabels: true, useMaxWidth: true } });
+</script>
+</body>
+</html>
